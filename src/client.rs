@@ -3,7 +3,7 @@ use crate::deepsafe::runtime_types::ethereum::transaction::{
 };
 use anyhow::Result;
 use codec::{Compact, Encode};
-use sxn_node_primitives::AccountId20;
+use deeps_node_primitives::AccountId20;
 use sp_core::H256 as Hash;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -24,9 +24,9 @@ pub enum NodeConfig {}
 
 impl Config for NodeConfig {
     type Hash = Hash;
-    type AccountId = sxn_node_primitives::AccountId20;
-    type Address = sp_runtime::MultiAddress<sxn_node_primitives::AccountId20, ()>;
-    type Signature = sxn_node_primitives::EthereumSignature;
+    type AccountId = deeps_node_primitives::AccountId20;
+    type Address = sp_runtime::MultiAddress<deeps_node_primitives::AccountId20, ()>;
+    type Signature = deeps_node_primitives::EthereumSignature;
     type Hasher = BlakeTwo256;
     type Header = SubstrateHeader<u32, BlakeTwo256>;
     type ExtrinsicParams = PolkadotExtrinsicParams<Self>;

@@ -1,16 +1,16 @@
 [package]
-name = "sxn-pallets-api"
+name = "deeps-pallets-api"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 log = "0.4.14"
 anyhow = "1.0"
-sp-core = { git = "https://github.com/safexn/polkadot-sdk", branch = "deep" }
-sp-runtime = { git = "https://github.com/safexn/polkadot-sdk", branch = "deep" }
-precompile-utils = { git = "https://github.com/safexn/frontier.git", branch = "deep" }
-subxt = { git = "https://github.com/safexn/subxt.git", branch = "deep-v0.37.0", features = ["jsonrpsee", "native", "substrate-compat", "unstable-light-client"]}
-sxn-telemetry-client = { git = "https://github.com/safexn/sxn-telemetry-client", branch = "main", optional = true }
+sp-core = { git = "https://github.com/deepslabs/polkadot-sdk", branch = "deep" }
+sp-runtime = { git = "https://github.com/deepslabs/polkadot-sdk", branch = "deep" }
+precompile-utils = { git = "https://github.com/deepslabs/frontier.git", branch = "deep" }
+subxt = { git = "https://github.com/deepslabs/subxt.git", branch = "deep-v0.37.0", features = ["jsonrpsee", "native", "substrate-compat", "unstable-light-client"]}
+deeps-telemetry-client = { git = "https://github.com/deepslabs/deeps-telemetry-client", branch = "main", optional = true }
 codec = { package = "parity-scale-codec", version = "3.2.2", features = ["derive", "full"] }
 tokio = { version = "1.27.0", features = ["macros"] }
 url = { version = "^2.2", features = ["serde"] }
@@ -19,8 +19,8 @@ serde = { version = "1.0.195", default-features = false, features = ["alloc", "d
 libsecp256k1 = { version = "0.3.2", default-features = false }
 
 # local dependencies
-sxn-node-primitives = { git = "https://github.com/safexn/sxn-common" }
-sxn-chain-bridge = { git = "https://github.com/safexn/sxn-common" }
+deeps-node-primitives = { git = "https://github.com/deepslabs/deeps-common" }
+deeps-chain-bridge = { git = "https://github.com/deepslabs/deeps-common" }
 
 # extra dependencies
 ethereum = { version = "0.14.0", features = ["with-codec"]}
@@ -29,7 +29,7 @@ ethereum = { version = "0.14.0", features = ["with-codec"]}
 env_logger = "0.9"
 
 [features]
-telemetry = ["sxn-telemetry-client"]
+telemetry = ["deeps-telemetry-client"]
 
 # hotfix for https://github.com/paritytech/polkadot-sdk/issues/7653
 [patch.'https://github.com/w3f/fflonk']

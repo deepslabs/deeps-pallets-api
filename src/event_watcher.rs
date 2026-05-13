@@ -1,6 +1,6 @@
 //! EventWatcher for DeepSafe node witch DeepSafeSubClient.
 use crate::{NodeConfig, DeepSafeSubClient as SubClient};
-use sxn_node_primitives::Hash;
+use deeps_node_primitives::Hash;
 use std::{cmp::Ordering, collections::HashMap};
 use subxt::events::EventDetails;
 use subxt::blocks::BlockRef;
@@ -88,9 +88,9 @@ impl EventWatcher {
         }
         #[cfg(feature = "telemetry")]
         {
-            sxn_telemetry_client::set_best_block_number(self.latest);
-            sxn_telemetry_client::set_finalized_block_number(self.finalized);
-            sxn_telemetry_client::set_handled_block_number(self.finalized);
+            deeps_telemetry_client::set_best_block_number(self.latest);
+            deeps_telemetry_client::set_finalized_block_number(self.finalized);
+            deeps_telemetry_client::set_handled_block_number(self.finalized);
         }
     }
 
@@ -164,8 +164,8 @@ impl EventWatcher {
 
                 #[cfg(feature = "telemetry")]
                 {
-                    sxn_telemetry_client::set_best_block_number(self.latest);
-                    sxn_telemetry_client::set_finalized_block_number(self.finalized);
+                    deeps_telemetry_client::set_best_block_number(self.latest);
+                    deeps_telemetry_client::set_finalized_block_number(self.finalized);
                 }
 
                 tokio::time::sleep(std::time::Duration::from_secs(3)).await;
