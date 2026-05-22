@@ -297,7 +297,9 @@ impl std::str::FromStr for ChannelEvent {
             "SignMergeTx" => Ok(ChannelEvent::SignMergeTx),
             "SubmitMergeTx" => Ok(ChannelEvent::SubmitMergeTx),
             "NewGroupedTransaction" => Ok(ChannelEvent::NewGroupedTransaction),
-            "SubmitGroupedTransactionSignResult" => Ok(ChannelEvent::SubmitGroupedTransactionSignResult),
+            "SubmitGroupedTransactionSignResult" => {
+                Ok(ChannelEvent::SubmitGroupedTransactionSignResult)
+            }
             _ => Ok(ChannelEvent::Unknown),
         }
     }

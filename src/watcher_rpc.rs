@@ -20,6 +20,8 @@ use sp_core::{H160, H256};
 
 /// keccak_256("submitTxSignResult(bytes[],bytes[],uint256,uint256,bytes32,bytes[])".as_bytes())[..4]
 pub const REPORT_RESULT_SELECTOR: [u8; 4] = [118, 72, 134, 178];
+/// keccak_256("submitGroupedTxSignResult(bytes,bytes,uint256,uint256,bytes32,bytes,uint16[])".as_bytes())[..4]
+pub const REPORT_GROUPED_RESULT_SELECTOR: [u8; 4] = [16, 246, 155, 4];
 /// keccak_256("importNewTx(uint256,uint256,bytes[],uint256,bytes[],bytes[],bytes[],uint256)".as_bytes())[..4]
 pub const SUBMIT_TRANSACTION_SELECTOR: [u8; 4] = [58, 164, 61, 2];
 /// keccak_256("joinOrExitServiceUnsigned(bytes[],uint256,bytes[],bytes[])".as_bytes())[..4]
@@ -122,15 +124,27 @@ pub async fn report_result_by_evm(
     hash: H256,
     signature: Vec<u8>,
     call_bytes: bool,
+    grouped_index: Option<Vec<u16>>,
 ) -> Result<Vec<u8>, String> {
     // build writer with 'reportResult' select
-    let writer = EvmDataWriter::new_with_selector(u32::from_be_bytes(REPORT_RESULT_SELECTOR))
-        .write(UnboundedBytes::from(pk))
-        .write(UnboundedBytes::from(sig))
-        .write(cid)
-        .write(fork_id)
-        .write(hash)
-        .write(UnboundedBytes::from(signature));
+    let writer = if let Some(grouped_index) = grouped_index {
+        EvmDataWriter::new_with_selector(u32::from_be_bytes(REPORT_GROUPED_RESULT_SELECTOR))
+            .write(UnboundedBytes::from(pk))
+            .write(UnboundedBytes::from(sig))
+            .write(cid)
+            .write(fork_id)
+            .write(hash)
+            .write(UnboundedBytes::from(signature))
+            .write(grouped_index)
+    } else {
+        EvmDataWriter::new_with_selector(u32::from_be_bytes(REPORT_RESULT_SELECTOR))
+            .write(UnboundedBytes::from(pk))
+            .write(UnboundedBytes::from(sig))
+            .write(cid)
+            .write(fork_id)
+            .write(hash)
+            .write(UnboundedBytes::from(signature))
+    };
 
     let input = writer.build();
 

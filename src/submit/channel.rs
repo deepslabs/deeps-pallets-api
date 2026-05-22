@@ -1,7 +1,7 @@
+use crate::handle_custom_error;
 use crate::node::runtime_types::pallet_channel::types::{
     CmtType, HandleConnection, TaprootType, TxSource, XudtStatus,
 };
-use crate::handle_custom_error;
 use sp_core::H256 as Hash;
 
 pub struct Channel<'a> {
@@ -115,14 +115,31 @@ impl<'a> Channel<'a> {
         fork_id: u8,
         hash: Hash,
         signature: Vec<u8>,
+        valid_grouped_index: Option<Vec<u16>>,
     ) -> Result<Vec<u8>, String> {
-        let call = crate::node::tx()
-            .channel()
-            .submit_tx_sign_result(pk, sig, cid, fork_id, hash, signature);
-        self.client
-            .unsigned_tx_encode_to_bytes(call)
-            .await
-            .map_err(|e| e.to_string())
+        if let Some(grouped_index) = valid_grouped_index {
+            let call = crate::node::tx().channel().submit_grouped_tx_sign_result(
+                pk,
+                sig,
+                cid,
+                fork_id,
+                hash,
+                signature,
+                grouped_index,
+            );
+            self.client
+                .unsigned_tx_encode_to_bytes(call)
+                .await
+                .map_err(|e| e.to_string())
+        } else {
+            let call = crate::node::tx()
+                .channel()
+                .submit_tx_sign_result(pk, sig, cid, fork_id, hash, signature);
+            self.client
+                .unsigned_tx_encode_to_bytes(call)
+                .await
+                .map_err(|e| e.to_string())
+        }
     }
 
     pub async fn request_sign(
