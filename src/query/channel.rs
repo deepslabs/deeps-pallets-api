@@ -1,8 +1,8 @@
 use crate::node::runtime_types::fp_account::AccountId20;
 use crate::node::runtime_types::pallet_channel::types::{
     BindingType, BtcCmtType, BtcScriptPair, BtcTxTunnel, Channel as ChannelP, CommitteeFeeConfig,
-    ForcedWithdrawalRecord, MergeUtxoRecord, RefreshRecord, SlaveMessage, SourceTXInfo,
-    TaprootPair, TxMessage, UidRecord, XudtInfo, XudtIssueRecord,
+    ForcedWithdrawalRecord, GroupedTxInfo, MergeUtxoRecord, RefreshRecord, SlaveMessage,
+    SourceTXInfo, TaprootPair, TxMessage, UidRecord, XudtInfo, XudtIssueRecord,
 };
 use sp_core::H256 as Hash;
 
@@ -321,5 +321,15 @@ impl<'a> Channel<'a> {
             }
         }
         Ok(slave_sigs)
+    }
+
+    pub async fn grouped_tx_infos(
+        &self,
+        cid: u32,
+        hash: Hash,
+        at_block: Option<Hash>,
+    ) -> Result<Option<GroupedTxInfo>, subxt::Error> {
+        let store = crate::node::storage().channel().grouped_tx_infos(cid, hash);
+        self.client.query_storage(store, at_block).await
     }
 }

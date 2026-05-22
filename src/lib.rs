@@ -130,6 +130,8 @@ pub enum ChannelEvent {
     MergeUtxo,
     SignMergeTx,
     SubmitMergeTx,
+    NewGroupedTransaction,
+    SubmitGroupedTransactionSignResult,
     Unknown,
 }
 
@@ -157,6 +159,8 @@ impl ChannelEvent {
             "MergeUtxo".into(),
             "SignMergeTx".into(),
             "SubmitMergeTx".into(),
+            "NewGroupedTransaction".into(),
+            "SubmitGroupedTransactionSignResult".into(),
         ]
     }
 }
@@ -289,6 +293,11 @@ impl std::str::FromStr for ChannelEvent {
             "RequestForcedWithdrawal" => Ok(ChannelEvent::RequestForcedWithdrawal),
             "SignForcedWithdrawal" => Ok(ChannelEvent::SignForcedWithdrawal),
             "FinishForcedWithdrawal" => Ok(ChannelEvent::FinishForcedWithdrawal),
+            "MergeUtxo" => Ok(ChannelEvent::MergeUtxo),
+            "SignMergeTx" => Ok(ChannelEvent::SignMergeTx),
+            "SubmitMergeTx" => Ok(ChannelEvent::SubmitMergeTx),
+            "NewGroupedTransaction" => Ok(ChannelEvent::NewGroupedTransaction),
+            "SubmitGroupedTransactionSignResult" => Ok(ChannelEvent::SubmitGroupedTransactionSignResult),
             _ => Ok(ChannelEvent::Unknown),
         }
     }
