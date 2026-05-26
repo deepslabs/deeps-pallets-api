@@ -266,3 +266,17 @@ pub async fn collect_slave_signatures_adp(
         .await
         .unwrap_or_default()
 }
+
+pub async fn collect_grouped_messages_adp(
+    sub_client: &NodeClient,
+    cid: u32,
+    hash: &[u8],
+    is_valid: bool,
+) -> Option<Vec<Vec<u8>>> {
+    sub_client
+        .query()
+        .channel()
+        .collect_grouped_messages(cid, H256::from_slice(hash), is_valid)
+        .await
+        .unwrap_or_default()
+}

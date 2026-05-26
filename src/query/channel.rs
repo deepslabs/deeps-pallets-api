@@ -332,4 +332,41 @@ impl<'a> Channel<'a> {
         let store = crate::node::storage().channel().grouped_tx_infos(cid, hash);
         self.client.query_storage(store, at_block).await
     }
+
+    pub async fn collect_grouped_messages(
+        &self,
+        cid: u32,
+        hash: Hash,
+        is_valid: bool,
+    ) -> Result<Option<Vec<Vec<u8>>>, subxt::Error> {
+        let grouped_info = self.grouped_tx_infos(cid, hash, None).await?;
+        if let Some(info) = grouped_info {
+            let mut sub_msgs = Vec::new();
+            let grouped_hashes = if is_valid {
+                info.indexes
+                    .iter()
+                    .filter_map(|&idx| {
+                        let index = idx as usize;
+                        if index < info.hashes.len() {
+                            Some(info.hashes[index])
+                        } else {
+                            None
+                        }
+                    })
+                    .collect()
+            } else {
+                info.hashes
+            };
+            for sub_hash in grouped_hashes {
+                if let Ok(Some(tx_msg)) = self.tx_messages(cid, sub_hash.into(), None).await {
+                    sub_msgs.push(tx_msg.msg);
+                } else {
+                    log::warn!(target: "event_handler", "fetch sub tx message failed for cid: {cid}, sub_hash: {sub_hash:?}");
+                }
+            }
+            Ok(Some(sub_msgs))
+        } else {
+            Ok(None)
+        }
+    }
 }
