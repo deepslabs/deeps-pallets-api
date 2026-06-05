@@ -733,139 +733,253 @@ pub fn default_port(scheme: &str) -> Option<u16> {
     }
 }
 
-#[tokio::test]
-async fn test_rebuild_client() {
-    use crate::NodeRpc;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    let url = "ws://127.0.0.1:9944".to_string();
-    let sk = "5fb92d6e98884f76de468fa3f6278f8807c48bebc13595d45af5bdc4da702133".to_string();
-    let client = SubClient::new_from_ecdsa_sk(url, Some(sk), None, None)
-        .await
-        .unwrap();
-    loop {
-        println!("try to query challenges");
-        let res = client.query().mining().challenges(1, None).await.unwrap();
-        println!("query challenges result: {:?}", res);
-        std::thread::sleep(std::time::Duration::from_secs(2));
+    #[tokio::test]
+    async fn test_rebuild_client() {
+        use crate::NodeRpc;
+
+        let url = "ws://127.0.0.1:9944".to_string();
+        let sk = "5fb92d6e98884f76de468fa3f6278f8807c48bebc13595d45af5bdc4da702133".to_string();
+        let client = SubClient::new_from_ecdsa_sk(url, Some(sk), None, None)
+            .await
+            .unwrap();
+        loop {
+            println!("try to query challenges");
+            let res = client.query().mining().challenges(1, None).await.unwrap();
+            println!("query challenges result: {:?}", res);
+            std::thread::sleep(std::time::Duration::from_secs(2));
+        }
     }
-}
 
-#[tokio::test]
-async fn test_query_iter() {
-    use crate::NodeRpc;
+    #[tokio::test]
+    async fn test_query_iter() {
+        use crate::NodeRpc;
 
-    let url = "wss://test-rpc-node-ws.node.network".to_string();
-    let client = crate::client::SubClient::new_from_signer(&url, None, None, None)
-        .await
-        .unwrap();
-    let res = client
-        .query()
-        .committee()
-        .committees_iter(300, None)
-        .await
-        .unwrap();
-    println!("res: {res:?}");
-}
-
-#[tokio::test]
-async fn test_query_cmt() {
-    use crate::NodeRpc;
-
-    let url = "wss://test-rpc-node-ws.node.network".to_string();
-    let client = crate::client::SubClient::new_from_signer(&url, None, None, None)
-        .await
-        .unwrap();
-
-    for i in 1u32..426 {
+        let url = "wss://test-rpc-node-ws.node.network".to_string();
+        let client = crate::client::SubClient::new_from_signer(&url, None, None, None)
+            .await
+            .unwrap();
         let res = client
             .query()
             .committee()
-            .committees(i, None)
+            .committees_iter(300, None)
             .await
             .unwrap();
         println!("res: {res:?}");
     }
-}
 
-#[tokio::test]
-async fn test_query_btc_committee_type_iter() {
-    use crate::NodeRpc;
+    #[tokio::test]
+    async fn test_query_cmt() {
+        use crate::NodeRpc;
 
-    let url = "ws://127.0.0.1:9933".to_string();
-    let client = crate::client::SubClient::new_from_signer(&url, None, None, None)
-        .await
-        .unwrap();
-    let res = client
-        .query()
-        .channel()
-        .btc_committee_type_iter(300, None)
-        .await
-        .unwrap();
-    println!("res: {res:?}");
-    let res = client
-        .query()
-        .channel()
-        .channel_mapping_tick_iter(300, None)
-        .await
-        .unwrap();
-    println!("res: {res:?}");
-    println!("hex: {:?}", hex::encode([240, 159, 165, 154]));
-}
+        let url = "wss://test-rpc-node-ws.node.network".to_string();
+        let client = crate::client::SubClient::new_from_signer(&url, None, None, None)
+            .await
+            .unwrap();
 
-#[tokio::test]
-async fn test_nonce_roll_back() {
-    std::env::set_var("RUST_LOG", "debug");
-    env_logger::init();
-    use crate::NodeClient;
-    use std::str::FromStr;
+        for i in 1u32..426 {
+            let res = client
+                .query()
+                .committee()
+                .committees(i, None)
+                .await
+                .unwrap();
+            println!("res: {res:?}");
+        }
+    }
 
-    let url = "ws://127.0.0.1:9933".to_string();
-    let sk_bytes = hex::decode("").unwrap();
-    let sk = SecretKey::parse_slice(&sk_bytes).unwrap();
-    let signer = Secp256k1Signer::new(sk);
-    let client = NodeClient::new_from_signer(&url, Some(signer), None, Some(20))
-        .await
-        .unwrap();
-    let account = AccountId20::from_str("0x89Bdaf4AC10bC9d497BCa9a5cc37972026146E0E").unwrap();
-    let dst = crate::node::runtime_types::fp_account::AccountId20(account.0);
+    #[tokio::test]
+    async fn test_query_btc_committee_type_iter() {
+        use crate::NodeRpc;
 
-    for i in 0..200 {
-        log::info!("index: {i}");
+        let url = "ws://127.0.0.1:9933".to_string();
+        let client = crate::client::SubClient::new_from_signer(&url, None, None, None)
+            .await
+            .unwrap();
+        let res = client
+            .query()
+            .channel()
+            .btc_committee_type_iter(300, None)
+            .await
+            .unwrap();
+        println!("res: {res:?}");
+        let res = client
+            .query()
+            .channel()
+            .channel_mapping_tick_iter(300, None)
+            .await
+            .unwrap();
+        println!("res: {res:?}");
+        println!("hex: {:?}", hex::encode([240, 159, 165, 154]));
+    }
+
+    #[tokio::test]
+    async fn test_nonce_roll_back() {
+        std::env::set_var("RUST_LOG", "debug");
+        env_logger::init();
+        use crate::NodeClient;
+        use std::str::FromStr;
+
+        let url = "ws://127.0.0.1:9933".to_string();
+        let sk_bytes = hex::decode("5fb92d6e98884f76de468fa3f6278f8807c48bebc13595d45af5bdc4da702133").unwrap();
+        let sk = SecretKey::parse_slice(&sk_bytes).unwrap();
+        let signer = Secp256k1Signer::new(sk);
+        let client = NodeClient::new_from_signer(&url, Some(signer), None, Some(20))
+            .await
+            .unwrap();
+        let account = AccountId20::from_str("0x89Bdaf4AC10bC9d497BCa9a5cc37972026146E0E").unwrap();
+        let dst = crate::node::runtime_types::fp_account::AccountId20(account.0);
+
+        for i in 0..200 {
+            log::info!("index: {i}");
+            let call = crate::node::tx()
+                .balances()
+                .transfer_keep_alive(dst.clone().into(), 100000);
+            let res = client
+                .submit_extrinsic_with_signer_without_watch(call, None)
+                .await
+                .map_err(|e| e.to_string());
+            log::info!("submit res: {res:?}");
+        }
+    }
+
+    #[tokio::test]
+    async fn test_submit_tx_by_call_bytes() {
+        std::env::set_var("RUST_LOG", "debug");
+        env_logger::init();
+        use crate::NodeClient;
+        use std::str::FromStr;
+
+        let url = "ws://127.0.0.1:9944".to_string();
+        let sk_bytes =
+            hex::decode("5fb92d6e98884f76de468fa3f6278f8807c48bebc13595d45af5bdc4da702133")
+                .unwrap(); // alice
+        let sk = SecretKey::parse_slice(&sk_bytes).unwrap();
+        let signer = Secp256k1Signer::new(sk);
+        let client = NodeClient::new_from_signer(&url, Some(signer), None, Some(20))
+            .await
+            .unwrap();
+        let account = AccountId20::from_str("0x89Bdaf4AC10bC9d497BCa9a5cc37972026146E0E").unwrap();
+        let dst = crate::node::runtime_types::fp_account::AccountId20(account.0);
         let call = crate::node::tx()
             .balances()
             .transfer_keep_alive(dst.clone().into(), 100000);
+        let call_bytes = client.signed_tx_encode_to_bytes(call, None).await.unwrap();
         let res = client
-            .submit_extrinsic_with_signer_without_watch(call, None)
+            .submit_extrinsic_without_signer_from_bytes(call_bytes)
             .await
             .map_err(|e| e.to_string());
         log::info!("submit res: {res:?}");
     }
-}
 
-#[tokio::test]
-async fn test_submit_tx_by_call_bytes() {
-    std::env::set_var("RUST_LOG", "debug");
-    env_logger::init();
-    use crate::NodeClient;
-    use std::str::FromStr;
+    #[tokio::test]
+    async fn test_submit_extrinsic_by_evm() {
+        std::env::set_var("RUST_LOG", "debug");
+        env_logger::init();
+        use crate::NodeClient;
+        use crate::monitor_rpc;
+        use crate::types::{ExtrinsicData, NeedSignedExtrinsic, PreparedCrossTransactionData};
+        use chain_bridge::chain::ChainType;
+        use node_primitives::AccountId20;
+        use std::sync::Arc;
+        use tokio::sync::Semaphore;
 
-    let url = "ws://127.0.0.1:9944".to_string();
-    let sk_bytes =
-        hex::decode("5fb92d6e98884f76de468fa3f6278f8807c48bebc13595d45af5bdc4da702133").unwrap(); // alice
-    let sk = SecretKey::parse_slice(&sk_bytes).unwrap();
-    let signer = Secp256k1Signer::new(sk);
-    let client = NodeClient::new_from_signer(&url, Some(signer), None, Some(20))
-        .await
-        .unwrap();
-    let account = AccountId20::from_str("0x89Bdaf4AC10bC9d497BCa9a5cc37972026146E0E").unwrap();
-    let dst = crate::node::runtime_types::fp_account::AccountId20(account.0);
-    let call = crate::node::tx()
-        .balances()
-        .transfer_keep_alive(dst.clone().into(), 100000);
-    let call_bytes = client.signed_tx_encode_to_bytes(call, None).await.unwrap();
-    let res = client
-        .submit_extrinsic_without_signer_from_bytes(call_bytes)
-        .await
-        .map_err(|e| e.to_string());
-    log::info!("submit res: {res:?}");
+        let url = "ws://127.0.0.1:9933".to_string();
+
+        // Generate multiple accounts by deriving from the base Alice key.
+        // Each account gets its own NodeClient so nonce/cache tracking is independent.
+        let base_sk_bytes =
+            hex::decode("5fb92d6e98884f76de468fa3f6278f8807c48bebc13595d45af5bdc4da702133")
+                .unwrap(); // alice
+        let num_accounts: u8 = 1;
+        let mut clients: Vec<NodeClient> = Vec::new();
+        for i in 0..num_accounts {
+            let mut sk_bytes = base_sk_bytes.clone();
+            // Derive distinct keys by XORing the first byte with the account index
+            sk_bytes[0] ^= i;
+            let sk = SecretKey::parse_slice(&sk_bytes).unwrap();
+            let signer = Secp256k1Signer::<NodeConfig>::new(sk);
+            let account = signer.account_id().clone();
+            let client =
+                NodeClient::new_from_signer(&url, Some(signer), None, Some(500))
+                    .await
+                    .unwrap();
+            log::info!(
+                "account[{}] = {}",
+                i,
+                hex::encode(AccountId20::from(account).0)
+            );
+            clients.push(client);
+        }
+
+        // Build test cross-transaction data
+        let make_tx = |i: u32| NeedSignedExtrinsic {
+            id: i,
+            data: ExtrinsicData::PreparedCrossTransaction(PreparedCrossTransactionData {
+                channel_id: 0,
+                cid: 0,
+                uid: vec![i as u8; 32],
+                msg: vec![i as u8; 64],
+                chain_type: ChainType::Eth,
+                from: vec![0u8; 20],
+                to: vec![0u8; 20],
+                amount: vec![0u8; 32],
+            }),
+        };
+
+        // Limit concurrent RPC requests to avoid exhausting the jsonrpsee request slots
+        let semaphore = Arc::new(Semaphore::new(50));
+
+        // Concurrently submit EVM transactions across multiple accounts (round-robin)
+        let mut handles = Vec::new();
+        let total_tx = 4000;
+        for i in 0..total_tx {
+            let ext = make_tx(i);
+            let account_idx = (i as usize) % clients.len();
+            let sub_client = clients[account_idx].clone();
+            let permit = semaphore.clone();
+            handles.push(tokio::spawn(async move {
+                let _permit = permit.acquire().await;
+                let res = monitor_rpc::submit_extrinsic_by_evm(&sub_client, ext).await;
+                log::info!("evm tx {}/{} submit res: {:?}", account_idx, i, res);
+                res
+            }));
+        }
+
+        let mut success_count = 0;
+        let mut fail_count = 0;
+        for handle in handles {
+            match handle.await {
+                Ok(Ok(hash)) => {
+                    log::info!("evm tx success: {}", hash);
+                    success_count += 1;
+                }
+                Ok(Err(e)) => {
+                    log::error!("evm tx failed: {}", e);
+                    fail_count += 1;
+                }
+                Err(e) => {
+                    log::error!("task panicked: {}", e);
+                    fail_count += 1;
+                }
+            }
+        }
+        log::info!(
+            "evm batch result: success={}, fail={}, total={}",
+            success_count,
+            fail_count,
+            total_tx
+        );
+
+        for (i, client) in clients.iter().enumerate() {
+            log::info!(
+                "account[{}] inner_nonce: {}",
+                i,
+                *client.inner_nonce.read().await
+            );
+        }
+    }
 }
