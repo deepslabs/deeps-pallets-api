@@ -12,7 +12,7 @@ frame-system = { git = "https://github.com/deepslabs/polkadot-sdk", branch = "de
 precompile-utils = { git = "https://github.com/deepslabs/frontier.git", branch = "deep-stable2603" }
 subxt = { git = "https://github.com/deepslabs/subxt.git", branch = "deep-stable2603" }
 deeps-telemetry-client = { git = "https://github.com/deepslabs/deeps-telemetry-client", branch = "main", optional = true }
-codec = { package = "parity-scale-codec", version = "3.2.2", features = ["derive", "full"] }
+codec = { package = "parity-scale-codec", version = "3.7.5", features = ["derive", "full"] }
 tokio = { version = "1.27.0", features = ["macros"] }
 url = { version = "^2.2", features = ["serde"] }
 hex = "0.4.2"
