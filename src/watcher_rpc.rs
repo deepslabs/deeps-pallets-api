@@ -5,7 +5,7 @@ use crate::{
     no_prefix,
     node::runtime_types::{
         ethereum::transaction::{
-            EIP1559Transaction, TransactionAction, TransactionV2 as Transaction,
+            eip1559::EIP1559Transaction, eip2930::TransactionSignature, legacy::TransactionAction, TransactionV3 as Transaction,
         },
         pallet_facility::pallet::DIdentity,
         pallet_mining::types::{DeviceMode, MonitorType, OnChainPayload, Purpose},
@@ -178,9 +178,11 @@ pub async fn report_result_by_evm(
         value: crate::node::runtime_types::primitive_types::U256(zero_u256),
         input,
         access_list: vec![],
-        odd_y_parity: Default::default(),
-        r: subxt::utils::H256::default(),
-        s: subxt::utils::H256::default(),
+        signature: TransactionSignature {
+            odd_y_parity: Default::default(),
+            r: subxt::utils::H256::default(),
+            s: subxt::utils::H256::default(),
+        },
     });
 
     if call_bytes {
@@ -246,9 +248,11 @@ pub async fn join_or_exit_service_unsigned_by_evm(
         value: crate::node::runtime_types::primitive_types::U256(zero_u256),
         input,
         access_list: vec![],
-        odd_y_parity: Default::default(),
-        r: subxt::utils::H256::default(),
-        s: subxt::utils::H256::default(),
+        signature: TransactionSignature {
+            odd_y_parity: Default::default(),
+            r: subxt::utils::H256::default(),
+            s: subxt::utils::H256::default(),
+        },
     });
 
     sub_client

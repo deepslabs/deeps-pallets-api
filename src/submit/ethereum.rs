@@ -1,4 +1,4 @@
-use crate::node::runtime_types::ethereum::transaction::TransactionV2 as Transaction;
+use crate::node::runtime_types::ethereum::transaction::TransactionV3 as Transaction;
 use crate::handle_custom_error;
 use subxt::utils::H256 as Hash;
 

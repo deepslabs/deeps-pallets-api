@@ -1,5 +1,6 @@
 use crate::node::runtime_types::ethereum::transaction::{
-    EIP1559Transaction, TransactionAction, TransactionV2 as EvmTransaction,
+    eip1559::EIP1559Transaction, eip2930::TransactionSignature, legacy::TransactionAction,
+    TransactionV3 as EvmTransaction
 };
 use crate::{Secp256k1Signer, SecretKey};
 use anyhow::Result;
@@ -620,9 +621,11 @@ impl SubClient<NodeConfig, Secp256k1Signer<NodeConfig>> {
             value: crate::node::runtime_types::primitive_types::U256(tx.value.0),
             input: tx.input,
             access_list: vec![],
-            odd_y_parity: recid.serialize() != 0,
-            r,
-            s,
+            signature: TransactionSignature {
+                odd_y_parity: recid.serialize() != 0,
+                r,
+                s,
+            },
         }))
     }
 }
