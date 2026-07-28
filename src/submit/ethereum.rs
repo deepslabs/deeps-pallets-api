@@ -1,6 +1,6 @@
 use crate::node::runtime_types::ethereum::transaction::TransactionV2 as Transaction;
 use crate::handle_custom_error;
-use sp_core::H256 as Hash;
+use subxt::utils::H256 as Hash;
 
 pub struct Ethereum<'a> {
     pub(crate) client: &'a crate::NodeClient,

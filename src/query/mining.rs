@@ -5,7 +5,7 @@ use crate::node::runtime_types::{
     primitive_types::U256,
     sp_arithmetic::per_things::Perbill,
 };
-use sp_core::H256 as Hash;
+use subxt::utils::H256 as Hash;
 
 pub struct Mining<'a> {
     pub(crate) client: &'a crate::NodeClient,

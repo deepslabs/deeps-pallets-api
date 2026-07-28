@@ -16,7 +16,8 @@ use codec::Encode;
 
 use crate::NodeClient;
 use precompile_utils::{prelude::UnboundedBytes, solidity::codec::Writer as EvmDataWriter};
-use sp_core::{H160, H256};
+use sp_core::H256;
+use subxt::utils::H160;
 
 /// keccak_256("submitTxSignResult(bytes[],bytes[],uint256,uint256,bytes32,bytes[])".as_bytes())[..4]
 pub const REPORT_RESULT_SELECTOR: [u8; 4] = [118, 72, 134, 178];
@@ -155,33 +156,31 @@ pub async fn report_result_by_evm(
         .await
         .map_err(|e| e.to_string())?
         .ok_or("get evm chain failed".to_string())?;
-    let tx = ethereum::EIP1559TransactionMessage {
-        chain_id,
-        nonce: sp_core::U256::from(0u128),
-        max_priority_fee_per_gas: sp_core::U256::from(1500000000u128),
-        max_fee_per_gas: sp_core::U256::from(4500000000u128),
-        gas_limit: sp_core::U256::from(50000000u128),
-        action: ethereum::TransactionAction::Call(H160::from_low_u64_be(1104)),
-        value: sp_core::U256::from(0u128),
-        input,
-        access_list: Default::default(),
-    };
+    let zero_u256 = [0u64; 4];
     let transaction = Transaction::EIP1559(EIP1559Transaction {
         chain_id,
-        nonce: crate::node::runtime_types::primitive_types::U256(tx.nonce.0),
-        max_priority_fee_per_gas: crate::node::runtime_types::primitive_types::U256(
-            tx.max_priority_fee_per_gas.0,
-        ),
-        max_fee_per_gas: crate::node::runtime_types::primitive_types::U256(tx.max_fee_per_gas.0),
-        gas_limit: crate::node::runtime_types::primitive_types::U256(tx.gas_limit.0),
+        nonce: crate::node::runtime_types::primitive_types::U256(zero_u256),
+        max_priority_fee_per_gas: crate::node::runtime_types::primitive_types::U256([
+            1500000000u64,
+            0,
+            0,
+            0,
+        ]),
+        max_fee_per_gas: crate::node::runtime_types::primitive_types::U256([
+            4500000000u64,
+            0,
+            0,
+            0,
+        ]),
+        gas_limit: crate::node::runtime_types::primitive_types::U256([50000000u64, 0, 0, 0]),
         // channel precompile contract address
         action: TransactionAction::Call(H160::from_low_u64_be(1104)),
-        value: crate::node::runtime_types::primitive_types::U256(tx.value.0),
-        input: tx.input,
+        value: crate::node::runtime_types::primitive_types::U256(zero_u256),
+        input,
         access_list: vec![],
         odd_y_parity: Default::default(),
-        r: H256(Default::default()),
-        s: H256(Default::default()),
+        r: subxt::utils::H256::default(),
+        s: subxt::utils::H256::default(),
     });
 
     if call_bytes {
@@ -225,33 +224,31 @@ pub async fn join_or_exit_service_unsigned_by_evm(
         .await
         .map_err(|e| e.to_string())?
         .ok_or("get evm chain failed".to_string())?;
-    let tx = ethereum::EIP1559TransactionMessage {
-        chain_id,
-        nonce: sp_core::U256::from(0u128),
-        max_priority_fee_per_gas: sp_core::U256::from(1500000000u128),
-        max_fee_per_gas: sp_core::U256::from(4500000000u128),
-        gas_limit: sp_core::U256::from(50000000u128),
-        // mining precompile contract address
-        action: ethereum::TransactionAction::Call(H160::from_low_u64_be(1101)),
-        value: sp_core::U256::from(0u128),
-        input,
-        access_list: Default::default(),
-    };
+    let zero_u256 = [0u64; 4];
     let transaction = Transaction::EIP1559(EIP1559Transaction {
         chain_id,
-        nonce: crate::node::runtime_types::primitive_types::U256(tx.nonce.0),
-        max_priority_fee_per_gas: crate::node::runtime_types::primitive_types::U256(
-            tx.max_priority_fee_per_gas.0,
-        ),
-        max_fee_per_gas: crate::node::runtime_types::primitive_types::U256(tx.max_fee_per_gas.0),
-        gas_limit: crate::node::runtime_types::primitive_types::U256(tx.gas_limit.0),
+        nonce: crate::node::runtime_types::primitive_types::U256(zero_u256),
+        max_priority_fee_per_gas: crate::node::runtime_types::primitive_types::U256([
+            1500000000u64,
+            0,
+            0,
+            0,
+        ]),
+        max_fee_per_gas: crate::node::runtime_types::primitive_types::U256([
+            4500000000u64,
+            0,
+            0,
+            0,
+        ]),
+        gas_limit: crate::node::runtime_types::primitive_types::U256([50000000u64, 0, 0, 0]),
+        // mining precompile contract address
         action: TransactionAction::Call(H160::from_low_u64_be(1101)),
-        value: crate::node::runtime_types::primitive_types::U256(tx.value.0),
-        input: tx.input,
+        value: crate::node::runtime_types::primitive_types::U256(zero_u256),
+        input,
         access_list: vec![],
         odd_y_parity: Default::default(),
-        r: H256(Default::default()),
-        s: H256(Default::default()),
+        r: subxt::utils::H256::default(),
+        s: subxt::utils::H256::default(),
     });
 
     sub_client

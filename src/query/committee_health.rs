@@ -2,7 +2,7 @@ use crate::node::runtime_types::pallet_committee_health::pallet::{
     ConfirmData, ConsensusStage, DHCState,
 };
 use crate::node::runtime_types::pallet_mining::types::DeviceMode;
-use sp_core::H256 as Hash;
+use subxt::utils::H256 as Hash;
 
 pub struct CommitteeHealth<'a> {
     pub(crate) client: &'a crate::NodeClient,

@@ -2,7 +2,7 @@ use crate::handle_custom_error;
 use crate::node::runtime_types::pallet_channel::types::{
     CmtType, HandleConnection, TaprootType, TxSource, XudtStatus,
 };
-use sp_core::H256 as Hash;
+use subxt::utils::H256 as Hash;
 
 pub struct Channel<'a> {
     pub(crate) client: &'a crate::NodeClient,

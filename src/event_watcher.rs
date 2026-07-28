@@ -1,6 +1,6 @@
 //! EventWatcher for node witch NodeClient.
 use crate::{NodeClient as SubClient, NodeConfig};
-use node_primitives::Hash;
+use subxt::utils::H256 as Hash;
 use std::{cmp::Ordering, collections::HashMap};
 use subxt::events::EventDetails;
 use subxt::Config;
