@@ -6,8 +6,7 @@ use crate::{no_prefix, NodeRpc};
 use precompile_utils::prelude::UnboundedBytes;
 use precompile_utils::solidity::codec::Writer as EvmDataWriter;
 use sp_core::{Encode, U256 as SpU256};
-use subxt::config::polkadot::U256;
-use subxt::utils::{H160, H256};
+use subxt::utils::H256;
 
 pub async fn submit_extrinsic(
     sub_client: &NodeClient,
@@ -113,7 +112,7 @@ pub async fn submit_extrinsic_by_evm(
                                         .map_err(|e| e.to_string())?;
                                     eip1995_tx.max_priority_fee_per_gas = eip1995_tx
                                         .max_priority_fee_per_gas
-                                        + U256::from(*tip + 100u128);
+                                        + SpU256::from(*tip + 100u128);
                                     let evm_tx = sub_client.build_eip1559_tx_to_v2(eip1995_tx)?;
                                     let evm_call = crate::node::tx().ethereum().transact(evm_tx);
                                     client
@@ -146,17 +145,20 @@ pub async fn submit_extrinsic_by_evm(
             };
             let tx = ethereum::EIP1559Transaction {
                 chain_id,
-                nonce: U256::from(target_nonce),
-                max_priority_fee_per_gas: U256::from(1500000000u128),
-                max_fee_per_gas: U256::from(4500000000u128),
-                gas_limit: U256::from(500000u128),
-                action: ethereum::TransactionAction::Call(H160::from_low_u64_be(1104)),
-                value: U256::from(0u128),
+                nonce: SpU256::from(target_nonce),
+                max_priority_fee_per_gas: SpU256::from(1500000000u128),
+                max_fee_per_gas: SpU256::from(4500000000u128),
+                gas_limit: SpU256::from(500000u128),
+                action: ethereum::TransactionAction::Call(sp_core::H160::from_low_u64_be(1104)),
+                value: SpU256::from(0u128),
                 input,
                 access_list: Default::default(),
-                odd_y_parity: false,
-                r: Default::default(),
-                s: Default::default(),
+                signature: ethereum::eip2930::TransactionSignature::new(
+                    false,
+                    sp_core::H256::from_low_u64_be(1),
+                    sp_core::H256::from_low_u64_be(1),
+                )
+                .expect("valid default signature"),
             };
             let transaction = sub_client.build_eip1559_tx_to_v2(tx.clone())?;
             match sub_client

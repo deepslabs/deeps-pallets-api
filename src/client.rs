@@ -7,12 +7,13 @@ use anyhow::Result;
 use codec::{Compact, Encode};
 use node_primitives::AccountId20;
 use subxt::utils::H256 as Hash;
+use sp_core::U256 as SpU256;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 use subxt::config::extrinsic_params::BaseExtrinsicParamsBuilder;
 use subxt::config::{
-    polkadot::{PolkadotExtrinsicParams, U256 as EthU256},
+    polkadot::PolkadotExtrinsicParams,
     substrate::{BlakeTwo256, SubstrateHeader},
 };
 use subxt::tx::{Signer, SubmittableExtrinsic};
@@ -248,7 +249,7 @@ impl SubClient<NodeConfig, Secp256k1Signer<NodeConfig>> {
                                     )?;
                                 eip1995_tx.max_priority_fee_per_gas = eip1995_tx
                                     .max_priority_fee_per_gas
-                                    + EthU256::from(*tip + 100u128);
+                                    + SpU256::from(*tip + 100u128);
                                 let evm_tx = self
                                     .build_eip1559_tx_to_v2(eip1995_tx)
                                     .map_err(|e| Error::Other(e))?;
@@ -339,7 +340,7 @@ impl SubClient<NodeConfig, Secp256k1Signer<NodeConfig>> {
                                     )?;
                                 eip1995_tx.max_priority_fee_per_gas = eip1995_tx
                                     .max_priority_fee_per_gas
-                                    + EthU256::from(*tip + 100u128);
+                                    + SpU256::from(*tip + 100u128);
                                 let evm_tx = self
                                     .build_eip1559_tx_to_v2(eip1995_tx)
                                     .map_err(|e| Error::Other(e))?;
@@ -615,7 +616,7 @@ impl SubClient<NodeConfig, Secp256k1Signer<NodeConfig>> {
             ),
             gas_limit: crate::node::runtime_types::primitive_types::U256(tx.gas_limit.0),
             action: match tx.action {
-                ethereum::TransactionAction::Call(addr) => TransactionAction::Call(addr),
+                ethereum::TransactionAction::Call(addr) => TransactionAction::Call(subxt::utils::H160::from_slice(addr.as_bytes())),
                 _ => return Err(format!("Invalid evm tx action: {:?}", tx.action)),
             },
             value: crate::node::runtime_types::primitive_types::U256(tx.value.0),
