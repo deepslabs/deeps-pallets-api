@@ -140,18 +140,8 @@ pub async fn report_result_by_evm(
     let transaction = Transaction::EIP1559(EIP1559Transaction {
         chain_id,
         nonce: crate::node::runtime_types::primitive_types::U256(zero_u256),
-        max_priority_fee_per_gas: crate::node::runtime_types::primitive_types::U256([
-            1500000000u64,
-            0,
-            0,
-            0,
-        ]),
-        max_fee_per_gas: crate::node::runtime_types::primitive_types::U256([
-            4500000000u64,
-            0,
-            0,
-            0,
-        ]),
+        max_priority_fee_per_gas: crate::node::runtime_types::primitive_types::U256(zero_u256),
+        max_fee_per_gas: crate::node::runtime_types::primitive_types::U256(zero_u256),
         gas_limit: crate::node::runtime_types::primitive_types::U256([50000000u64, 0, 0, 0]),
         // channel precompile contract address
         action: TransactionAction::Call(H160::from_low_u64_be(1104)),
@@ -242,18 +232,8 @@ pub async fn join_or_exit_service_unsigned_by_evm(
     let transaction = Transaction::EIP1559(EIP1559Transaction {
         chain_id,
         nonce: crate::node::runtime_types::primitive_types::U256(zero_u256),
-        max_priority_fee_per_gas: crate::node::runtime_types::primitive_types::U256([
-            1500000000u64,
-            0,
-            0,
-            0,
-        ]),
-        max_fee_per_gas: crate::node::runtime_types::primitive_types::U256([
-            4500000000u64,
-            0,
-            0,
-            0,
-        ]),
+        max_priority_fee_per_gas: crate::node::runtime_types::primitive_types::U256(zero_u256),
+        max_fee_per_gas: crate::node::runtime_types::primitive_types::U256(zero_u256),
         gas_limit: crate::node::runtime_types::primitive_types::U256([50000000u64, 0, 0, 0]),
         // mining precompile contract address
         action: TransactionAction::Call(H160::from_low_u64_be(1101)),
