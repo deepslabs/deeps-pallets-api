@@ -5,7 +5,7 @@ use crate::{
     no_prefix,
     node::runtime_types::{
         ethereum::transaction::{
-            EIP1559Transaction, TransactionAction, TransactionV2 as Transaction,
+            eip1559::EIP1559Transaction, eip2930::TransactionSignature, legacy::TransactionAction, TransactionV3 as Transaction,
         },
         pallet_facility::pallet::DIdentity,
         pallet_mining::types::{DeviceMode, MonitorType, OnChainPayload, Purpose},
@@ -16,7 +16,8 @@ use codec::Encode;
 
 use crate::NodeClient;
 use precompile_utils::{prelude::UnboundedBytes, solidity::codec::Writer as EvmDataWriter};
-use sp_core::{H160, H256};
+use sp_core::H256;
+use subxt::utils::H160;
 
 /// keccak_256("submitTxSignResult(bytes[],bytes[],uint256,uint256,bytes32,bytes[])".as_bytes())[..4]
 pub const REPORT_RESULT_SELECTOR: [u8; 4] = [118, 72, 134, 178];
@@ -126,7 +127,61 @@ pub async fn report_result_by_evm(
     call_bytes: bool,
     grouped_index: Option<Vec<u16>>,
 ) -> Result<Vec<u8>, String> {
-    // build writer with 'reportResult' select
+    let input = build_report_result_calldata(pk, sig, cid, fork_id, hash, signature, grouped_index);
+
+    let chain_id = sub_client
+        .query()
+        .ethereum()
+        .evm_chain_id(None)
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or("get evm chain failed".to_string())?;
+    let zero_u256 = [0u64; 4];
+    let transaction = Transaction::EIP1559(EIP1559Transaction {
+        chain_id,
+        nonce: crate::node::runtime_types::primitive_types::U256(zero_u256),
+        max_priority_fee_per_gas: crate::node::runtime_types::primitive_types::U256(zero_u256),
+        max_fee_per_gas: crate::node::runtime_types::primitive_types::U256(zero_u256),
+        gas_limit: crate::node::runtime_types::primitive_types::U256([50000000u64, 0, 0, 0]),
+        // channel precompile contract address
+        action: TransactionAction::Call(H160::from_low_u64_be(1104)),
+        value: crate::node::runtime_types::primitive_types::U256(zero_u256),
+        input,
+        access_list: vec![],
+        signature: TransactionSignature {
+            odd_y_parity: Default::default(),
+            r: subxt::utils::H256::from_low_u64_be(1),
+            s: subxt::utils::H256::from_low_u64_be(1),
+        },
+    });
+
+    if call_bytes {
+        sub_client
+            .submit()
+            .ethereum()
+            .transact_unsigned_call_bytes(transaction)
+            .await
+    } else {
+        sub_client
+            .submit()
+            .ethereum()
+            .transact_unsigned(transaction)
+            .await
+            .map(|hash| hash.0.to_vec())
+    }
+}
+
+/// Build the EVM calldata for reportResult / reportGroupedResult without needing a node client.
+/// This pure function is useful for testing the ABI encoding logic.
+pub fn build_report_result_calldata(
+    pk: Vec<u8>,
+    sig: Vec<u8>,
+    cid: u32,
+    fork_id: u8,
+    hash: H256,
+    signature: Vec<u8>,
+    grouped_index: Option<Vec<u16>>,
+) -> Vec<u8> {
     let writer = if let Some(grouped_index) = grouped_index {
         EvmDataWriter::new_with_selector(u32::from_be_bytes(REPORT_GROUPED_RESULT_SELECTOR))
             .write(UnboundedBytes::from(pk))
@@ -145,59 +200,7 @@ pub async fn report_result_by_evm(
             .write(hash)
             .write(UnboundedBytes::from(signature))
     };
-
-    let input = writer.build();
-
-    let chain_id = sub_client
-        .query()
-        .ethereum()
-        .evm_chain_id(None)
-        .await
-        .map_err(|e| e.to_string())?
-        .ok_or("get evm chain failed".to_string())?;
-    let tx = ethereum::EIP1559TransactionMessage {
-        chain_id,
-        nonce: sp_core::U256::from(0u128),
-        max_priority_fee_per_gas: sp_core::U256::from(1500000000u128),
-        max_fee_per_gas: sp_core::U256::from(4500000000u128),
-        gas_limit: sp_core::U256::from(50000000u128),
-        action: ethereum::TransactionAction::Call(H160::from_low_u64_be(1104)),
-        value: sp_core::U256::from(0u128),
-        input,
-        access_list: Default::default(),
-    };
-    let transaction = Transaction::EIP1559(EIP1559Transaction {
-        chain_id,
-        nonce: crate::node::runtime_types::primitive_types::U256(tx.nonce.0),
-        max_priority_fee_per_gas: crate::node::runtime_types::primitive_types::U256(
-            tx.max_priority_fee_per_gas.0,
-        ),
-        max_fee_per_gas: crate::node::runtime_types::primitive_types::U256(tx.max_fee_per_gas.0),
-        gas_limit: crate::node::runtime_types::primitive_types::U256(tx.gas_limit.0),
-        // channel precompile contract address
-        action: TransactionAction::Call(H160::from_low_u64_be(1104)),
-        value: crate::node::runtime_types::primitive_types::U256(tx.value.0),
-        input: tx.input,
-        access_list: vec![],
-        odd_y_parity: Default::default(),
-        r: H256(Default::default()),
-        s: H256(Default::default()),
-    });
-
-    if call_bytes {
-        sub_client
-            .submit()
-            .ethereum()
-            .transact_unsigned_call_bytes(transaction)
-            .await
-    } else {
-        sub_client
-            .submit()
-            .ethereum()
-            .transact_unsigned(transaction)
-            .await
-            .map(|hash| hash.0.to_vec())
-    }
+    writer.build()
 }
 
 pub async fn join_or_exit_service_unsigned_by_evm(
@@ -225,33 +228,23 @@ pub async fn join_or_exit_service_unsigned_by_evm(
         .await
         .map_err(|e| e.to_string())?
         .ok_or("get evm chain failed".to_string())?;
-    let tx = ethereum::EIP1559TransactionMessage {
-        chain_id,
-        nonce: sp_core::U256::from(0u128),
-        max_priority_fee_per_gas: sp_core::U256::from(1500000000u128),
-        max_fee_per_gas: sp_core::U256::from(4500000000u128),
-        gas_limit: sp_core::U256::from(50000000u128),
-        // mining precompile contract address
-        action: ethereum::TransactionAction::Call(H160::from_low_u64_be(1101)),
-        value: sp_core::U256::from(0u128),
-        input,
-        access_list: Default::default(),
-    };
+    let zero_u256 = [0u64; 4];
     let transaction = Transaction::EIP1559(EIP1559Transaction {
         chain_id,
-        nonce: crate::node::runtime_types::primitive_types::U256(tx.nonce.0),
-        max_priority_fee_per_gas: crate::node::runtime_types::primitive_types::U256(
-            tx.max_priority_fee_per_gas.0,
-        ),
-        max_fee_per_gas: crate::node::runtime_types::primitive_types::U256(tx.max_fee_per_gas.0),
-        gas_limit: crate::node::runtime_types::primitive_types::U256(tx.gas_limit.0),
+        nonce: crate::node::runtime_types::primitive_types::U256(zero_u256),
+        max_priority_fee_per_gas: crate::node::runtime_types::primitive_types::U256(zero_u256),
+        max_fee_per_gas: crate::node::runtime_types::primitive_types::U256(zero_u256),
+        gas_limit: crate::node::runtime_types::primitive_types::U256([50000000u64, 0, 0, 0]),
+        // mining precompile contract address
         action: TransactionAction::Call(H160::from_low_u64_be(1101)),
-        value: crate::node::runtime_types::primitive_types::U256(tx.value.0),
-        input: tx.input,
+        value: crate::node::runtime_types::primitive_types::U256(zero_u256),
+        input,
         access_list: vec![],
-        odd_y_parity: Default::default(),
-        r: H256(Default::default()),
-        s: H256(Default::default()),
+        signature: TransactionSignature {
+            odd_y_parity: Default::default(),
+            r: subxt::utils::H256::from_low_u64_be(1),
+            s: subxt::utils::H256::from_low_u64_be(1),
+        },
     });
 
     sub_client
@@ -272,4 +265,45 @@ pub async fn query_current_block_number(sub_client: &NodeClient) -> Result<u32, 
         .await
         .map(|block| block.number())
         .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sp_core::H256;
+    use crate::{Secp256k1Signer, SecretKey};
+
+    #[tokio::test]
+    async fn test_report_result_by_call_bytes() {
+        std::env::set_var("RUST_LOG", "debug");
+        env_logger::init();
+        use crate::NodeClient;
+
+        let url = "ws://127.0.0.1:9933".to_string();
+        let sk_bytes =
+            hex::decode("5fb92d6e98884f76de468fa3f6278f8807c48bebc13595d45af5bdc4da702133")
+                .unwrap(); // alice
+        let sk = SecretKey::parse_slice(&sk_bytes).unwrap();
+        let signer = Secp256k1Signer::new(sk);
+        let client = NodeClient::new_from_signer(&url, Some(signer), None, Some(20))
+            .await
+            .unwrap();
+        let call_bytes = report_result_by_evm(
+            &client,
+            vec![0u8; 33],
+            vec![0u8; 65],
+            2,
+            1,
+            H256::from_low_u64_be(123456),
+            vec![0u8; 65],
+            true,
+            None,
+        ).await.unwrap();
+        log::info!("call_bytes: {:?}", hex::encode(&call_bytes));
+        let res = client
+            .submit_extrinsic_without_signer_from_bytes(call_bytes)
+            .await
+            .map_err(|e| e.to_string());
+        log::info!("submit res: {res:?}");
+    }
 }

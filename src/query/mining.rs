@@ -1,11 +1,11 @@
 use crate::node::runtime_types::{
     fp_account::AccountId20,
     pallet_facility::pallet::DIdentity,
-    pallet_mining::types::{DeviceInfo, MonitorState, RegisterData},
+    pallet_mining::types::{DeviceInfo, DeviceMode, MonitorState, RegisterData},
     primitive_types::U256,
     sp_arithmetic::per_things::Perbill,
 };
-use sp_core::H256 as Hash;
+use subxt::utils::H256 as Hash;
 
 pub struct Mining<'a> {
     pub(crate) client: &'a crate::NodeClient,
@@ -295,10 +295,11 @@ impl<'a> Mining<'a> {
 
     pub async fn total_score_for_epoch(
         &self,
+        device_mode: DeviceMode,
         epoch: u64,
         at_block: Option<Hash>,
     ) -> Result<u128, subxt::Error> {
-        let store = crate::node::storage().mining().total_score_for_epoch(epoch);
+        let store = crate::node::storage().mining().total_score_for_epoch_by_mode(device_mode, epoch);
         self.client
             .query_storage(store, at_block)
             .await
@@ -322,12 +323,13 @@ impl<'a> Mining<'a> {
 
     pub async fn total_committee_score_for_epoch(
         &self,
+        device_mode: DeviceMode,
         epoch: u64,
         at_block: Option<Hash>,
     ) -> Result<u128, subxt::Error> {
         let store = crate::node::storage()
             .mining()
-            .total_committee_score_for_epoch(epoch);
+            .total_committee_score_for_epoch_by_mode(device_mode, epoch);
         self.client
             .query_storage(store, at_block)
             .await

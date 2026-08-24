@@ -2,7 +2,7 @@
 use crate::node::runtime_types::pallet_committee::types::{CommitteeMode, CryptoType, MissionType};
 use crate::node::runtime_types::pallet_mining::types::DeviceMode;
 use crate::handle_custom_error;
-use sp_core::H256 as Hash;
+use subxt::utils::H256 as Hash;
 
 pub struct Committee<'a> {
     pub(crate) client: &'a crate::NodeClient,

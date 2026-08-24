@@ -4,7 +4,7 @@ use crate::node::runtime_types::pallet_channel::types::{
     ForcedWithdrawalRecord, GroupedTxInfo, MergeUtxoRecord, RefreshRecord, SlaveMessage,
     SourceTXInfo, TaprootPair, TxMessage, UidRecord, XudtInfo, XudtIssueRecord,
 };
-use sp_core::H256 as Hash;
+use subxt::utils::H256 as Hash;
 
 pub struct Channel<'a> {
     pub(crate) client: &'a crate::NodeClient,

@@ -43,7 +43,7 @@ where
 impl<T> Signer<T> for Secp256k1Signer<T>
 where
     T: Config,
-    T::Signature: From<sp_core::ecdsa::Signature>,
+    T::Signature: From<sp_runtime::MultiSignature>,
     T::AccountId: Into<[u8; 20]>,
     <T as Config>::Address: From<T::AccountId>,
     T::Signature: Verify,
@@ -63,6 +63,7 @@ where
         sig[..64].copy_from_slice(signature.0.serialize().as_slice());
         sig[64] = signature.1.serialize();
         let ecdsa_signature = sp_core::ecdsa::Signature::from_raw(sig);
-        ecdsa_signature.into()
+        let multi_sig: sp_runtime::MultiSignature = ecdsa_signature.into();
+        multi_sig.into()
     }
 }

@@ -1,11 +1,13 @@
 use crate::node::runtime_types::ethereum::transaction::{
-    EIP1559Transaction, TransactionAction, TransactionV2 as EvmTransaction,
+    eip1559::EIP1559Transaction, eip2930::TransactionSignature, legacy::TransactionAction,
+    TransactionV3 as EvmTransaction
 };
 use crate::{Secp256k1Signer, SecretKey};
 use anyhow::Result;
 use codec::{Compact, Encode};
 use node_primitives::AccountId20;
-use sp_core::H256 as Hash;
+use subxt::utils::H256 as Hash;
+use sp_core::U256 as SpU256;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
@@ -28,7 +30,7 @@ pub enum NodeConfig {}
 
 impl Config for NodeConfig {
     type Index = u32;
-    type Hash = sp_core::H256;
+    type Hash = subxt::utils::H256;
     type AccountId = AccountId20;
     type Address = sp_runtime::MultiAddress<AccountId20, ()>;
     type Signature = node_primitives::EthereumSignature;
@@ -247,7 +249,7 @@ impl SubClient<NodeConfig, Secp256k1Signer<NodeConfig>> {
                                     )?;
                                 eip1995_tx.max_priority_fee_per_gas = eip1995_tx
                                     .max_priority_fee_per_gas
-                                    + sp_core::U256::from(*tip + 100u128);
+                                    + SpU256::from(*tip + 100u128);
                                 let evm_tx = self
                                     .build_eip1559_tx_to_v2(eip1995_tx)
                                     .map_err(|e| Error::Other(e))?;
@@ -338,7 +340,7 @@ impl SubClient<NodeConfig, Secp256k1Signer<NodeConfig>> {
                                     )?;
                                 eip1995_tx.max_priority_fee_per_gas = eip1995_tx
                                     .max_priority_fee_per_gas
-                                    + sp_core::U256::from(*tip + 100u128);
+                                    + SpU256::from(*tip + 100u128);
                                 let evm_tx = self
                                     .build_eip1559_tx_to_v2(eip1995_tx)
                                     .map_err(|e| Error::Other(e))?;
@@ -601,8 +603,8 @@ impl SubClient<NodeConfig, Secp256k1Signer<NodeConfig>> {
             secp256k1::Message::parse_slice(&tx.hash()[..]).map_err(|e| e.to_string())?;
         let (signature, recid) = secp256k1::sign(&signing_message, &secret);
         let rs = signature.serialize();
-        let r = Hash::from_slice(&rs[0..32]);
-        let s = Hash::from_slice(&rs[32..64]);
+        let r = subxt::utils::H256::from_slice(&rs[0..32]);
+        let s = subxt::utils::H256::from_slice(&rs[32..64]);
         Ok(EvmTransaction::EIP1559(EIP1559Transaction {
             chain_id: tx.chain_id,
             nonce: crate::node::runtime_types::primitive_types::U256(tx.nonce.0),
@@ -614,15 +616,17 @@ impl SubClient<NodeConfig, Secp256k1Signer<NodeConfig>> {
             ),
             gas_limit: crate::node::runtime_types::primitive_types::U256(tx.gas_limit.0),
             action: match tx.action {
-                ethereum::TransactionAction::Call(addr) => TransactionAction::Call(addr),
+                ethereum::TransactionAction::Call(addr) => TransactionAction::Call(subxt::utils::H160::from_slice(addr.as_bytes())),
                 _ => return Err(format!("Invalid evm tx action: {:?}", tx.action)),
             },
             value: crate::node::runtime_types::primitive_types::U256(tx.value.0),
             input: tx.input,
             access_list: vec![],
-            odd_y_parity: recid.serialize() != 0,
-            r,
-            s,
+            signature: TransactionSignature {
+                odd_y_parity: recid.serialize() != 0,
+                r,
+                s,
+            },
         }))
     }
 }

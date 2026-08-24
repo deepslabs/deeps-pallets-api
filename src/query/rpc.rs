@@ -1,6 +1,6 @@
 use crate::node::runtime_types::fp_account::AccountId20 as RuntimeAccountId20;
 use crate::node::runtime_types::pallet_rpc::pallet::DeviceInfo;
-use sp_core::H256 as Hash;
+use subxt::utils::H256 as Hash;
 
 pub struct Rpc<'a> {
     pub(crate) client: &'a crate::NodeClient,

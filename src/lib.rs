@@ -15,7 +15,7 @@ pub use subxt::constants::Address;
 pub use subxt::events::StaticEvent;
 pub use subxt::{
     config::extrinsic_params::BaseExtrinsicParamsBuilder, error::RpcError, events::EventDetails,
-    subxt, Error, JsonRpseeError,
+    subxt, Error, JsonRpseeError, utils
 };
 
 /// use subxt cli to update metadata 'subxt metadata --url http://127.0.0.1:9933 --version 14 -f bytes > metadata.scale'

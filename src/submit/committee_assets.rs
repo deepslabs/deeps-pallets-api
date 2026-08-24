@@ -1,5 +1,5 @@
 use crate::handle_custom_error;
-use sp_core::H256 as Hash;
+use subxt::utils::H256 as Hash;
 
 pub struct CommitteeAssets<'a> {
     pub(crate) client: &'a crate::NodeClient,
